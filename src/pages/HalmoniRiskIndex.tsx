@@ -106,13 +106,24 @@ const HalmoniRiskIndex: React.FC = () => {
     }
   };
 
-  const OverviewView: React.FC = () => (
-
+const OverviewView = () => (
     <div className="space-y-6">
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-8 rounded-xl">
-        <h1 className="text-4xl font-bold mb-2">HAL-MONI (할머니)</h1>
-        <p className="text-xl opacity-90">Healthy Ageing Link – Model for Organized Network Integration</p>
-        <p className="mt-4 text-sm opacity-80">Predictive Risk Index for Rural Elder Care in Gangwon Province</p>
+      {/* Added 'relative' class here to position the logo inside */}
+      <div className="relative bg-gradient-to-r from-blue-600 to-purple-600 text-white p-8 rounded-xl overflow-hidden">
+        
+        {/* --- GANGWON LOGO ADDED HERE --- */}
+        <div className="absolute top-6 right-6">
+            <img 
+              src="/halmoni/gangwon.svg" 
+              alt="Gangwon-do" 
+              className="h-16 md:h-20 w-auto opacity-90" 
+            />
+        </div>
+        {/* ------------------------------- */}
+
+        <h1 className="text-4xl font-bold mb-2 relative z-10">HAL-MONI (할머니)</h1>
+        <p className="text-xl opacity-90 relative z-10">Healthy Ageing Link – Model for Organized Network Integration</p>
+        <p className="mt-4 text-sm opacity-80 relative z-10">Predictive Risk Index for Rural Elder Care in Gangwon Province</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
