@@ -62,35 +62,61 @@ interface ElderTemplate {
 
 const COUNTY_CONFIG: Record<
   CountyId,
-  { center: [number, number]; color: string; shortLabel: string }
+  { color: string; mapFillColor: string; shortLabel: string; spawnBounds: { minLat: number, maxLat: number, minLng: number, maxLng: number } }
 > = {
   'Jeongseon-gun': {
-    center: [37.38, 128.67],
     color: '#e63946',
+    mapFillColor: '#d97706', // Light Brown
     shortLabel: 'Jeongseon',
+    // Centered in Jeongseon proper
+    spawnBounds: { minLat: 37.30, maxLat: 37.45, minLng: 128.60, maxLng: 128.80 }
   },
   'Yanggu-gun': {
-    center: [38.1, 127.99],
     color: '#457b9d',
+    mapFillColor: '#3b82f6', // Blue
     shortLabel: 'Yanggu',
+    // Tighter bounds to stay South of DMZ (approx 38.3) and West of Inje
+    spawnBounds: { minLat: 38.05, maxLat: 38.25, minLng: 127.95, maxLng: 128.10 }
   },
   'Inje-gun': {
-    center: [38.06, 128.17],
     color: '#2a9d8f',
+    mapFillColor: '#8b5cf6', // Purple
     shortLabel: 'Inje',
+    // Adjusted to start East of Yanggu to prevent overlap
+    spawnBounds: { minLat: 37.90, maxLat: 38.20, minLng: 128.20, maxLng: 128.45 }
   },
 };
 
-const coordinateOffsets: Array<[number, number]> = [
-  [0.0, 0.0],
-  [0.03, 0.02],
-  [-0.02, 0.015],
-  [0.015, -0.02],
-  [-0.025, -0.01],
-  [0.01, 0.025],
-  [-0.015, 0.03],
-  [0.02, -0.015],
-];
+// Precise Administrative Approximations
+const COUNTY_POLYGONS: Record<CountyId, [number, number][]> = {
+  'Yanggu-gun': [
+    // Corrected to stay below DMZ (~38.3) and avoid overlap with Inje
+    [38.28, 127.92], // NW (Below DMZ)
+    [38.28, 128.12], // NE 
+    [38.15, 128.14], // Mid-East
+    [38.02, 128.08], // SE
+    [38.02, 127.95], // SW
+    [38.15, 127.90]  // Mid-West
+  ],
+  'Inje-gun': [
+    // Starts at 128.18 to ensure gap from Yanggu (at 128.14)
+    [38.25, 128.18], // NW
+    [38.25, 128.50], // NE
+    [38.00, 128.55], // SE
+    [37.85, 128.40], // South
+    [37.90, 128.20], // SW
+    [38.10, 128.18]  // West border
+  ],
+  'Jeongseon-gun': [
+    // Southern Gangwon
+    [37.55, 128.60], // NW
+    [37.50, 128.90], // NE
+    [37.30, 128.95], // SE
+    [37.15, 128.80], // South
+    [37.20, 128.55], // SW
+    [37.40, 128.50]  // West
+  ]
+};
 
 const ELDER_TEMPLATES: ElderTemplate[] = [
   {
@@ -230,10 +256,15 @@ const buildElderData = (): Elder[] => {
   for (let i = 0; i < total; i += 1) {
     const tmpl = ELDER_TEMPLATES[i % ELDER_TEMPLATES.length];
     const county = counties[i % counties.length];
-    const offset = coordinateOffsets[i % coordinateOffsets.length];
-    const center = COUNTY_CONFIG[county].center;
+    
+    // Use the spawnBounds to guarantee points are INSIDE the administrative area
+    const bounds = COUNTY_CONFIG[county].spawnBounds;
+    
+    // Random position strictly within the safe bounds
+    const lat = bounds.minLat + Math.random() * (bounds.maxLat - bounds.minLat);
+    const lng = bounds.minLng + Math.random() * (bounds.maxLng - bounds.minLng);
 
-    const riskScoreBase = tmpl.baseScore + ((i % 7) - 3); // -3 .. +3
+    const riskScoreBase = tmpl.baseScore + ((i % 7) - 3); 
     const riskScore = Math.max(15, Math.min(95, riskScoreBase));
 
     elders.push({
@@ -250,8 +281,8 @@ const buildElderData = (): Elder[] => {
       lastContact: tmpl.lastContact,
       alerts: tmpl.alerts,
       history: tmpl.history,
-      lat: center[0] + offset[0],
-      lng: center[1] + offset[1],
+      lat,
+      lng,
     });
 
     id += 1;
@@ -284,6 +315,19 @@ const getRiskColor = (level: RiskLevel): string => {
   }
 };
 
+const getRiskHexColor = (level: RiskLevel): string => {
+  switch (level) {
+    case 'High':
+      return '#ef4444'; // Red-500
+    case 'Moderate':
+      return '#f59e0b'; // Amber-500 (Orange-ish)
+    case 'Low':
+      return '#22c55e'; // Green-500
+    default:
+      return '#6b7280';
+  }
+};
+
 const getRiskBorderColor = (level: RiskLevel): string => {
   switch (level) {
     case 'High':
@@ -297,12 +341,7 @@ const getRiskBorderColor = (level: RiskLevel): string => {
   }
 };
 
-const getCountyColor = (county: CountyId): string => COUNTY_CONFIG[county].color;
-
 // --- Leaflet CDN Map Component ---
-// NOTE: Since we cannot use npm packages like 'react-leaflet' in this environment,
-// we are loading Leaflet directly from a CDN. In your local project, you can use
-// standard React-Leaflet components.
 
 const LeafletMap: React.FC<{ elders: Elder[], onMarkerClick: (e: Elder) => void }> = ({ elders, onMarkerClick }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -335,63 +374,108 @@ const LeafletMap: React.FC<{ elders: Elder[], onMarkerClick: (e: Elder) => void 
       const L = (window as any).L;
       
       // GANGWON-DO RESTRICTION
-      // Define bounds for Gangwon-do (Approximate)
-      // SouthWest: 37.0, 127.0
-      // NorthEast: 38.7, 129.6
       const corner1 = L.latLng(37.0, 127.0);
       const corner2 = L.latLng(38.8, 129.6);
       const bounds = L.latLngBounds(corner1, corner2);
 
       const map = L.map(mapContainerRef.current, {
-        center: [37.9, 128.2],
+        center: [37.8, 128.3],
         zoom: 9,
         minZoom: 8,
         maxBounds: bounds, // Restrict panning
         maxBoundsViscosity: 1.0 // Sticky edges
       });
 
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors'
+      // CartoDB Light basemap for professional look
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
       }).addTo(map);
 
       mapInstanceRef.current = map;
     }
   }, [libLoaded]);
 
-  // Handle Markers
+  // Handle Markers, Regions, and Labels
   useEffect(() => {
     if (libLoaded && mapInstanceRef.current) {
       const L = (window as any).L;
       const map = mapInstanceRef.current;
       
-      // Clear existing markers if any (simple approach for this demo)
+      // Clear existing layers
       map.eachLayer((layer: any) => {
-        if (layer instanceof L.CircleMarker) {
-          map.removeLayer(layer);
-        }
+        // Keep tile layer, remove everything else
+        if (layer instanceof L.TileLayer) return;
+        map.removeLayer(layer);
       });
 
+      // 1. Add "Gangwon-do" Province Label (Central)
+      const gangwonIcon = L.divIcon({
+        className: 'custom-div-icon',
+        html: `<div style="font-size: 16px; font-weight: 800; color: #64748b; letter-spacing: 2px; text-transform: uppercase; text-shadow: 2px 2px 0px #fff;">GANGWON-DO</div>`,
+        iconSize: [200, 30],
+        iconAnchor: [100, 15]
+      });
+      L.marker([37.8, 128.8], { icon: gangwonIcon, interactive: false }).addTo(map);
+
+      // 2. Draw County Highlights Only (Removed internal labels)
+      Object.entries(COUNTY_POLYGONS).forEach(([countyId, coords]) => {
+        const config = COUNTY_CONFIG[countyId as CountyId];
+        
+        // Polygon
+        L.polygon(coords, {
+          color: config.mapFillColor,
+          fillColor: config.mapFillColor,
+          fillOpacity: 0.15,
+          weight: 2,
+          opacity: 0.8,
+          dashArray: '5, 5' // Dashed line for a schematic look
+        }).addTo(map);
+      });
+
+      // 3. Draw People Markers (Colored by RISK LEVEL)
       elders.forEach((elder) => {
+        const isClickable = elder.county === 'Inje-gun'; // Only Inje-gun is clickable
         const radius = elder.riskLevel === 'High' ? 10 : elder.riskLevel === 'Moderate' ? 8 : 6;
+        const riskColor = getRiskHexColor(elder.riskLevel);
         
         const marker = L.circleMarker([elder.lat, elder.lng], {
           radius: radius,
-          fillColor: COUNTY_CONFIG[elder.county].color,
+          fillColor: riskColor, 
           color: '#fff',
-          weight: 1,
-          opacity: 1,
-          fillOpacity: 0.8
+          weight: 1.5,
+          opacity: isClickable ? 1 : 0.5, // Visual cue: fade out non-clickable
+          fillOpacity: isClickable ? 0.9 : 0.4
         });
 
-        marker.bindTooltip(`
-          <div style="text-align: center">
-            <strong>${elder.nameEn}</strong><br/>
-            Risk Score: ${elder.riskScore}
-          </div>
-        `, { direction: 'top', offset: [0, -5] });
+        // Add class to change cursor
+        if (isClickable) {
+          marker.on('mouseover', function (this: any) {
+             this._path.style.cursor = 'pointer';
+          });
+        } else {
+           marker.on('mouseover', function (this: any) {
+             this._path.style.cursor = 'default';
+          });
+        }
+
+        const tooltipText = isClickable 
+          ? `<div style="text-align: center">
+              <strong>${elder.nameEn}</strong><br/>
+              Risk: <span style="color:${riskColor}; font-weight:bold">${elder.riskLevel}</span><br/>
+              <span style="font-size:10px; color:blue">Click to view</span>
+             </div>`
+          : `<div style="text-align: center; color:gray">
+              <strong>${elder.nameEn}</strong><br/>
+              (${elder.county})<br/>
+              <span style="font-size:10px">Not assigned to you</span>
+             </div>`;
+
+        marker.bindTooltip(tooltipText, { direction: 'top', offset: [0, -5] });
 
         marker.on('click', () => {
-          onMarkerClick(elder);
+          if (isClickable) {
+            onMarkerClick(elder);
+          }
         });
 
         marker.addTo(map);
@@ -470,28 +554,46 @@ const HalmoniRiskIndex: React.FC = () => {
       <div className="bg-white p-6 rounded-lg shadow-md">
         <h2 className="text-2xl font-bold mb-2 text-gray-800">Pilot Map – Gangwon-do</h2>
         <p className="text-sm text-gray-600 mb-4">
-          Each dot represents an elderly resident across Jeongseon, Yanggu, and Inje.
-          <br/>
-          <span className="text-xs text-blue-600 font-medium">Map view restricted to Gangwon Province.</span>
+          Risk distribution map for Jeongseon, Yanggu, and Inje counties.
         </p>
 
-        <div className="h-80 w-full rounded-lg overflow-hidden border border-gray-200 relative z-0">
+        <div className="h-96 w-full rounded-lg overflow-hidden border border-gray-200 relative z-0">
           <LeafletMap elders={elderlyData} onMarkerClick={handleMarkerClick} />
         </div>
 
-        <div className="flex flex-wrap gap-4 mt-4 text-xs text-gray-600 justify-center">
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full" style={{ backgroundColor: COUNTY_CONFIG['Jeongseon-gun'].color }} />
-            <span>Jeongseon-gun</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full" style={{ backgroundColor: COUNTY_CONFIG['Yanggu-gun'].color }} />
-            <span>Yanggu-gun</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full" style={{ backgroundColor: COUNTY_CONFIG['Inje-gun'].color }} />
-            <span>Inje-gun</span>
-          </div>
+        {/* Legend */}
+        <div className="flex flex-wrap gap-6 mt-4 text-xs text-gray-600 justify-center">
+           <div className="flex items-center gap-4 border-r pr-6">
+              <span className="font-bold text-gray-800">RISK LEVELS:</span>
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full" style={{ backgroundColor: getRiskHexColor('High') }} />
+                <span>High</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full" style={{ backgroundColor: getRiskHexColor('Moderate') }} />
+                <span>Moderate</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full" style={{ backgroundColor: getRiskHexColor('Low') }} />
+                <span>Low</span>
+              </div>
+           </div>
+           
+           <div className="flex items-center gap-4">
+              <span className="font-bold text-gray-800">REGIONS:</span>
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-sm opacity-50" style={{ backgroundColor: COUNTY_CONFIG['Yanggu-gun'].mapFillColor }} />
+                <span>Yanggu</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-sm opacity-50" style={{ backgroundColor: COUNTY_CONFIG['Inje-gun'].mapFillColor }} />
+                <span>Inje</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-sm opacity-50" style={{ backgroundColor: COUNTY_CONFIG['Jeongseon-gun'].mapFillColor }} />
+                <span>Jeongseon</span>
+              </div>
+           </div>
         </div>
       </div>
 
@@ -549,6 +651,18 @@ const HalmoniRiskIndex: React.FC = () => {
     );
 
     // -------------------------------------------------------------
+    // NEW FEATURE: Sort by Priority (High Risk First)
+    // -------------------------------------------------------------
+    const sortedElders = [...assignedElders].sort((a, b) => {
+      const priorityOrder: Record<RiskLevel, number> = {
+        'High': 3,
+        'Moderate': 2,
+        'Low': 1
+      };
+      return priorityOrder[b.riskLevel] - priorityOrder[a.riskLevel];
+    });
+
+    // -------------------------------------------------------------
     // FEATURE REQUEST 2: Collapse functionality
     // -------------------------------------------------------------
     const toggleElderSelection = (elder: Elder) => {
@@ -570,15 +684,18 @@ const HalmoniRiskIndex: React.FC = () => {
               <p className="text-gray-600">
                 Assigned Area: <span className="font-bold text-teal-700">{ASSIGNED_COUNTY}</span>
               </p>
+              <p className="text-xs text-gray-500 mt-1">
+                Sorted by Risk Priority (High → Moderate → Low)
+              </p>
             </div>
             <div className="text-right">
-              <div className="text-3xl font-bold text-gray-800">{assignedElders.length}</div>
+              <div className="text-3xl font-bold text-gray-800">{sortedElders.length}</div>
               <div className="text-xs text-gray-500 uppercase tracking-wide">Assigned Cases</div>
             </div>
           </div>
 
           <div className="space-y-4">
-            {assignedElders.map((elder) => {
+            {sortedElders.map((elder) => {
               const isSelected = selectedElder?.id === elder.id;
               
               return (
