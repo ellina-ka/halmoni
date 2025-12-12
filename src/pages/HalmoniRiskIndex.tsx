@@ -38,7 +38,7 @@ interface Elder {
   riskScore: number;
   riskLevel: RiskLevel;
   health: number;
-  social: number;
+  psychosocial: number;
   economic: number;
   lastContact: string;
   alerts: string[];
@@ -59,7 +59,7 @@ interface ElderTemplate {
   age: number;
   baseScore: number;
   health: number;
-  social: number;
+  psychosocial: number;
   economic: number;
   lastContact: string;
   alerts: string[];
@@ -111,7 +111,7 @@ const ELDER_TEMPLATES: ElderTemplate[] = [
     age: 78,
     baseScore: 82,
     health: 75,
-    social: 88,
+    psychosocial: 88,
     economic: 72,
     lastContact: '5 days ago',
     alerts: ['No water usage for 36 hours', 'Missed weekly check-in call'],
@@ -123,10 +123,10 @@ const ELDER_TEMPLATES: ElderTemplate[] = [
     age: 82,
     baseScore: 65,
     health: 58,
-    social: 52,
+    psychosocial: 52,
     economic: 40,
     lastContact: '2 days ago',
-    alerts: ['Reduced social activity participation'],
+    alerts: ['Reduced psychosocial activity participation'],
     history: ['Regular community center visits', 'Good family support'],
   },
   {
@@ -135,7 +135,7 @@ const ELDER_TEMPLATES: ElderTemplate[] = [
     age: 74,
     baseScore: 28,
     health: 30,
-    social: 33,
+    psychosocial: 33,
     economic: 22,
     lastContact: '1 day ago',
     alerts: [],
@@ -147,7 +147,7 @@ const ELDER_TEMPLATES: ElderTemplate[] = [
     age: 81,
     baseScore: 76,
     health: 70,
-    social: 80,
+    psychosocial: 80,
     economic: 68,
     lastContact: '7 days ago',
     alerts: ['Two missed clinic appointments'],
@@ -159,7 +159,7 @@ const ELDER_TEMPLATES: ElderTemplate[] = [
     age: 79,
     baseScore: 49,
     health: 52,
-    social: 42,
+    psychosocial: 42,
     economic: 45,
     lastContact: '3 days ago',
     alerts: ['Stopped attending weekly walking group'],
@@ -171,7 +171,7 @@ const ELDER_TEMPLATES: ElderTemplate[] = [
     age: 72,
     baseScore: 34,
     health: 40,
-    social: 50,
+    psychosocial: 50,
     economic: 28,
     lastContact: 'Yesterday',
     alerts: [],
@@ -183,7 +183,7 @@ const ELDER_TEMPLATES: ElderTemplate[] = [
     age: 85,
     baseScore: 87,
     health: 80,
-    social: 60,
+    psychosocial: 60,
     economic: 55,
     lastContact: '10 days ago',
     alerts: ['No electricity usage for 24 hours'],
@@ -195,7 +195,7 @@ const ELDER_TEMPLATES: ElderTemplate[] = [
     age: 77,
     baseScore: 61,
     health: 62,
-    social: 70,
+    psychosocial: 70,
     economic: 50,
     lastContact: '4 days ago',
     alerts: ['Missed one AI phone check-in'],
@@ -207,7 +207,7 @@ const ELDER_TEMPLATES: ElderTemplate[] = [
     age: 80,
     baseScore: 43,
     health: 48,
-    social: 39,
+    psychosocial: 39,
     economic: 32,
     lastContact: '6 days ago',
     alerts: ['Irregular medication pick-up'],
@@ -219,7 +219,7 @@ const ELDER_TEMPLATES: ElderTemplate[] = [
     age: 75,
     baseScore: 32,
     health: 35,
-    social: 45,
+    psychosocial: 45,
     economic: 25,
     lastContact: 'Today',
     alerts: [],
@@ -257,7 +257,7 @@ const buildElderData = (): Elder[] => {
       riskScore,
       riskLevel: getRiskLevel(riskScore),
       health: tmpl.health,
-      social: tmpl.social,
+      psychosocial: tmpl.psychosocial,
       economic: tmpl.economic,
       lastContact: tmpl.lastContact,
       alerts: tmpl.alerts,
@@ -529,7 +529,7 @@ const HalmoniRiskIndex: React.FC = () => {
           <div className="p-4 bg-purple-50 rounded-lg">
             <div className="flex items-center mb-2">
               <Users className="text-purple-600 mr-2" size={20} />
-              <h3 className="font-semibold text-purple-900">Social Factors</h3>
+              <h3 className="font-semibold text-purple-900">psychosocial Factors</h3>
             </div>
             <ul className="text-sm text-gray-700 space-y-1">
               <li>• Living situation</li>
@@ -636,8 +636,8 @@ const HalmoniRiskIndex: React.FC = () => {
                           <div className="text-xs text-blue-800 font-medium">Health Risk</div>
                         </div>
                         <div className="text-center p-3 bg-purple-100 rounded border border-purple-200">
-                          <div className="text-xl font-bold text-purple-700">{elder.social}</div>
-                          <div className="text-xs text-purple-800 font-medium">Social Risk</div>
+                          <div className="text-xl font-bold text-purple-700">{elder.psychosocial}</div>
+                          <div className="text-xs text-purple-800 font-medium">psychosocial Risk</div>
                         </div>
                         <div className="text-center p-3 bg-green-100 rounded border border-green-200">
                           <div className="text-xl font-bold text-green-700">{elder.economic}</div>
@@ -701,7 +701,7 @@ const HalmoniRiskIndex: React.FC = () => {
         ]
       },
       {
-        id: 'social',
+        id: 'psychosocial',
         kr: '어제 대화한 사람이 있으신가요?',
         en: 'Did you speak with anyone yesterday?',
         options: [
