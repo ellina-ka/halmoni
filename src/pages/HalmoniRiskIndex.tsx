@@ -443,8 +443,8 @@ const HalmoniRiskIndex: React.FC = () => {
   const OverviewView: React.FC = () => (
     <div className="space-y-6">
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-8 rounded-xl shadow-lg">
-        <h1 className="text-4xl font-bold mb-2">HAL-MONI (할머니)</h1>
-        <p className="text-xl opacity-90">Healthy Ageing Link – Model for Organized Network Integration</p>
+        <h1 className="text-4xl font-bold mb-2">HALM-ONI (할머니)</h1>
+        <p className="text-xl opacity-90">Healt And Loneliness Monitoring – Outreach Network Initiative </p>
         <p className="mt-4 text-sm opacity-80">Predictive Risk Index for Rural Elder Care in Gangwon Province</p>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
