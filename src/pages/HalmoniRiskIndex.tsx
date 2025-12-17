@@ -692,7 +692,7 @@ const HalmoniRiskIndex: React.FC = () => {
     const questions = [
       {
         id: 'physical',
-        kr: '오늘 몸 컨디션은 어떠세요?',
+        kr: '오늘 몸 컨디션은 어떠신가요?',
         en: 'How is your body feeling today?',
         options: [
           { value: 'Good', labelKr: '좋음', labelEn: 'Good', icon: Smile, color: 'text-green-600', borderColor: 'border-green-200', bg: 'bg-green-50' },
@@ -702,7 +702,7 @@ const HalmoniRiskIndex: React.FC = () => {
       },
       {
         id: 'Psychosocial',
-        kr: '어제 대화한 사람이 있으신가요?',
+        kr: '어제 누군가와 대화하신 적이 있으신가요?',
         en: 'Did you speak with anyone yesterday?',
         options: [
           { value: 'Yes', labelKr: '네', labelEn: 'Yes', icon: MessageCircle, color: 'text-blue-600', borderColor: 'border-blue-200', bg: 'bg-blue-50' },
@@ -714,9 +714,9 @@ const HalmoniRiskIndex: React.FC = () => {
         kr: '오늘 기분은 어떠신가요?',
         en: 'How is your mood today?',
         options: [
-          { value: 'Happy', labelKr: '행복함', labelEn: 'Happy', icon: Smile, color: 'text-purple-600', borderColor: 'border-purple-200', bg: 'bg-purple-50' },
-          { value: 'Neutral', labelKr: '그저 그럼', labelEn: 'Neutral', icon: Meh, color: 'text-gray-600', borderColor: 'border-gray-200', bg: 'bg-gray-50' },
-          { value: 'Sad', labelKr: '슬픔', labelEn: 'Sad', icon: Frown, color: 'text-blue-600', borderColor: 'border-blue-200', bg: 'bg-blue-50' },
+          { value: 'Good', labelKr: '좋음', labelEn: 'Happy', icon: Smile, color: 'text-purple-600', borderColor: 'border-purple-200', bg: 'bg-purple-50' },
+          { value: 'Neutral', labelKr: '보통', labelEn: 'Neutral', icon: Meh, color: 'text-gray-600', borderColor: 'border-gray-200', bg: 'bg-gray-50' },
+          { value: 'Bad', labelKr: '나쁨', labelEn: 'Sad', icon: Frown, color: 'text-blue-600', borderColor: 'border-blue-200', bg: 'bg-blue-50' },
         ]
       }
     ];
@@ -745,7 +745,7 @@ const HalmoniRiskIndex: React.FC = () => {
     return (
       <div className="space-y-6">
         <div className="bg-gradient-to-r from-green-500 to-teal-500 text-white p-8 rounded-xl shadow-lg">
-          <h2 className="text-3xl font-bold mb-2">안녕하세요, 김영희 어르신</h2>
+          <h2 className="text-3xl font-bold mb-2">안녕하세요, 김영희님</h2>
           <p className="text-xl opacity-90 mb-1">Good Morning, Kim Young-hee</p>
           <p className="text-lg opacity-80">
             담당 선생님께 오늘의 상태를 알려주세요.<br/>
@@ -765,7 +765,7 @@ const HalmoniRiskIndex: React.FC = () => {
                 {isSubmitted ? "체크인 완료 (Check-In Completed)" : "오늘의 상태 체크 (Daily Check-In)"}
               </h3>
               <p className="text-sm text-gray-600">
-                {isSubmitted ? "오늘의 상태가 기록되었습니다. (Your status has been recorded.)" : "간단한 질문 3가지에 답해주세요. (Please answer 3 simple questions.)"}
+                {isSubmitted ? "오늘의 상태가 기록되었습니다. (Your status has been recorded.)" : "간단한 질문 3개에 답해 주세요. (Please answer 3 simple questions.)"}
               </p>
             </div>
             {isSubmitted ? (
